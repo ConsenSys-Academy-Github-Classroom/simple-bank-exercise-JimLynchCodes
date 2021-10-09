@@ -19,19 +19,13 @@ contract("SimpleBank", function (accounts) {
     instance = await SimpleBank.new();
   });
 
-  it("ready to be solved!", async() => {
+  it("ready to be solved!", async () => {
     const eth100 = 100e18;
     assert.equal(await web3.eth.getBalance(alice), eth100.toString());
   });
 
   it("is owned by owner", async () => {
     assert.equal(
-      // Hint:
-      //   the error `TypeError: Cannot read property 'call' of undefined`
-      //   will be fixed by setting the correct visibility specifier. See
-      //   the following two links
-      //   1: https://docs.soliditylang.org/en/v0.8.5/cheatsheet.html?highlight=visibility#function-visibility-specifiers
-      //   2: https://docs.soliditylang.org/en/v0.8.5/contracts.html#getter-functions
       await instance.owner.call(),
       contractOwner,
       "owner is not correct",
@@ -96,14 +90,52 @@ contract("SimpleBank", function (accounts) {
     const initialAmount = 0;
     await instance.enroll({ from: alice });
     await instance.deposit({ from: alice, value: deposit });
-    await instance.withdraw(deposit, { from: alice });
+    
+    const receipt = await instance.withdraw(deposit, { from: alice });
+
     const balance = await instance.getBalance.call({ from: alice });
 
     assert.equal(
-      balance.toString(),
-      initialAmount.toString(),
+      balance.toNumber(),
+      initialAmount,
       "balance incorrect after withdrawal, check withdraw method",
     );
+
+    // console.log(receipt.receipt.cumulativeGasUsed)
+
+    // const eth100 = 100e18;
+
+    // const actualBalance = await web3.eth.getBalance(alice);
+
+    // console.log('gas price: ', tx.gasPrice);
+
+    // const tx = await web3.eth.getTransaction(receipt.tx);
+    // const gasPrice = BigNumber.from(tx.gasPrice);
+    // console.log(`GasPrice: ${tx.gasPrice}`);
+
+    // const expectedBalance = +eth100 - (tx.receipt.cumulativeGasUsed)
+
+    // expect(actualBalance).to.equal(expectedBalance)
+
+    // assert.equal(actualBalance, expectedBalance);
+
+    // assert.equal(, eth100.toString());
+
+  });
+
+  it("should withdraw correct amount", async () => {
+    const initialAmount = 0;
+    await instance.enroll({ from: alice });
+    await instance.deposit({ from: alice, value: deposit });
+    
+    const withdrawAmount = await instance.withdraw.call(deposit, { from: alice });
+
+    assert.equal(
+      withdrawAmount.toNumber(),
+      deposit.toNumber(),
+      `withdraw amount was incorrect: ${withdrawAmount} was not ${deposit}`,
+    );
+
   });
 
   it("should not be able to withdraw more than has been deposited", async () => {
