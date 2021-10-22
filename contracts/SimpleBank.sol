@@ -60,7 +60,7 @@ contract SimpleBank {
         enrolled[msg.sender] = true;
     }
 
-    /// @notice Deposit ether into bank
+    /// @notice Deposit ether into ba
     /// @return The balance of the user after the deposit is made
     function deposit() public payable returns (uint256) {
         // 2. Users should be enrolled before they can make deposits

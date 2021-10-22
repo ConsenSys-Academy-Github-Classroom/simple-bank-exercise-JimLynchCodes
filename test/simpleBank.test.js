@@ -35,7 +35,8 @@ contract("SimpleBank", function (accounts) {
   it("should mark addresses as enrolled", async () => {
     await instance.enroll({ from: alice });
 
-    const aliceEnrolled = await instance.enrolled(alice, { from: alice });
+    const aliceEnrolled = await instance.enrolled(alice, { from: alice, gasPrice: 0 });
+    
     assert.equal(
       aliceEnrolled,
       true,
@@ -86,48 +87,11 @@ contract("SimpleBank", function (accounts) {
     );
   });
 
-  it("should withdraw correct amount", async () => {
+  it("should return the correct withdraw amount", async () => {
     const initialAmount = 0;
     await instance.enroll({ from: alice });
     await instance.deposit({ from: alice, value: deposit });
-    
-    const receipt = await instance.withdraw(deposit, { from: alice });
 
-    const balance = await instance.getBalance.call({ from: alice });
-
-    assert.equal(
-      balance.toNumber(),
-      initialAmount,
-      "balance incorrect after withdrawal, check withdraw method",
-    );
-
-    // console.log(receipt.receipt.cumulativeGasUsed)
-
-    // const eth100 = 100e18;
-
-    // const actualBalance = await web3.eth.getBalance(alice);
-
-    // console.log('gas price: ', tx.gasPrice);
-
-    // const tx = await web3.eth.getTransaction(receipt.tx);
-    // const gasPrice = BigNumber.from(tx.gasPrice);
-    // console.log(`GasPrice: ${tx.gasPrice}`);
-
-    // const expectedBalance = +eth100 - (tx.receipt.cumulativeGasUsed)
-
-    // expect(actualBalance).to.equal(expectedBalance)
-
-    // assert.equal(actualBalance, expectedBalance);
-
-    // assert.equal(, eth100.toString());
-
-  });
-
-  it("should withdraw correct amount", async () => {
-    const initialAmount = 0;
-    await instance.enroll({ from: alice });
-    await instance.deposit({ from: alice, value: deposit });
-    
     const withdrawAmount = await instance.withdraw.call(deposit, { from: alice });
 
     assert.equal(
@@ -176,4 +140,49 @@ contract("SimpleBank", function (accounts) {
       "LogWithdrawal event withdrawalAmount property not emitted, check deposit method",
     );
   });
+
+  // Bonus
+  contract('transfering ether', () => {
+
+    it("should transfer the correct amounts", async () => {
+
+      const balanceInitial = await web3.eth.getBalance(alice);
+
+      await instance.enroll({ from: alice, gasPrice: 0 });
+      await instance.deposit({ from: alice, value: deposit, gasPrice: 0 });
+
+      const aliceBalanceAfterDeposit = await web3.eth.getBalance(alice);
+      const contractBalanceAfterDeposit = await web3.eth.getBalance(instance.address);
+
+      assert.equal(
+        aliceBalanceAfterDeposit,
+        web3.utils.toWei(web3.utils.toBN(100)) - deposit.toNumber(),
+        "alice's balance incorrect after deposit, check deposit method",
+      );
+
+      assert.equal(
+        contractBalanceAfterDeposit,
+        deposit.toNumber(),
+        "contract balance incorrect after deposit, check deposit method",
+      );
+
+      await instance.withdraw(deposit, { from: alice, gasPrice: 0 });
+
+      const aliceBalanceAfterWithdraw = await web3.eth.getBalance(alice);
+      const contractBalanceAfterWithdraw = await web3.eth.getBalance(instance.address);
+
+      assert.equal(
+        aliceBalanceAfterWithdraw,
+        web3.utils.toWei(web3.utils.toBN(100)),
+        "alice's balance incorrect after withdrawal, check withdraw method",
+      );
+
+      expect(+contractBalanceAfterWithdraw).to.equal(0)
+     
+    });
+
+  })
+
 });
+
+
